@@ -1,7 +1,7 @@
 [proposal.md](https://github.com/user-attachments/files/25377887/proposal.md)
 # Project Proposal: From beginning Motif Discovery in Eukaryotic Promoters using Gibbs Sampling with Higher-Order Background Models
 
-#Hongyuan Deng
+##Hongyuan Deng
 
 ## Research Question
 **Question:** How can we accurately identify transcription factor binding sites (motifs) in the noisy, non-uniform upstream promoter regions of co-expressed genes, and how does accounting for genomic background bias improve discovery rates?
