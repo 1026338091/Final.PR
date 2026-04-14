@@ -1,0 +1,8 @@
+# Default Configuration for Gibbs Sampler
+algorithm:
+  k_width: 7               # Length of the motif to find
+  background_order: 1      # 0 for uniform, 1 for dinucleotide, 2 for trinucleotide
+  restarts: 10             # Number of independent random restarts
+  iterations: 100          # Total iterations per restart
+  burn_in: 20              # Iterations to ignore before scoring
+  pseudocount: 0.1         # To prevent log(0) errors
