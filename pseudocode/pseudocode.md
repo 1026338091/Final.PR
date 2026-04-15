@@ -20,7 +20,13 @@ This outer loop executes the core Gibbs Sampler multiple times with different ra
         OUTPUT: 
             best_overall_motifs: List of the best k-mers found
             best_overall_pwm: The corresponding Position Weight Matrix
+        ASSUMPTIONS:
+            - All input sequences are longer than or equal to k.
+            - Sequences contain only standard nucleotides (A, C, G, T).
 
+        // CRITICAL: Initialize random seed globally ONCE outside the loops 
+        // to maintain coherent stochastic trajectories and ensure independent runs.
+        InitializeGlobalRandomSeed()
         best_overall_score = -INFINITY
         best_overall_motifs = NULL
         best_overall_pwm = NULL
@@ -47,12 +53,13 @@ The stochastic heart of the algorithm. It iteratively refines the motif by leavi
         // 1. Initialization
         motifs = RandomlySelectInitialKmers(DnaSequences, k)
         
-        // 2. Background Model Initialization (Key Innovation)
-        // Calculates single-nucleotide frequencies (0-order) or dinucleotide frequencies across all input data
-        bg_model = TrainBackgroundModel(DnaSequences) 
+        // 2. Background Model Initialization
+        // Calculates 0-order nucleotide frequencies across all input data.
+        // Returns a dictionary, e.g., {A: 0.25, C: 0.30, G: 0.30, T: 0.15}
+        bg_model_dict = TrainBackgroundModel(DnaSequences) 
 
         best_motifs = motifs
-        best_score = CalculateInformationContent(motifs, bg_model)
+        best_score = CalculateInformationContent(motifs, bg_model_dict)
 
         FOR iter FROM 1 TO max_iterations:
             // Select a sequence to hold out randomly
@@ -121,4 +128,12 @@ Phase 3: Edge Case Testing
 Phase Shift Tolerance: I will write an evaluation function that counts a predicted motif as "correct" if its start index is within +/- 2 bp of the true planted index, acknowledging that Gibbs sampling often converges on slightly shifted overlapping sequences.
 Adversarial Background: I will generate synthetic sequences with a heavy GC bias (e.g., 75% G/C) and plant an AT-rich motif. This will explicitly test if my Background Model correctly penalizes GC-rich noise and successfully isolates the true motif.
 
+5. Potential Pitfalls & Mitigations
+
+* **Pitfall 1: Markov Chain Collapse (Random Seed Misplacement):** If the random seed is initialized *inside* the outer loop (restarts) or inner loop (Gibbs iterations), the stochastic trajectories will repeat themselves, defeating the purpose of MCMC and Monte Carlo simulations. 
+  * *Mitigation:* Explicitly enforce global initialization of the random seed strictly outside and prior to all looping structures to guarantee mathematically independent sampling runs.
+* **Pitfall 2: Local Optima Traps:** Gibbs Sampling is highly prone to getting stuck in sub-optimal motif spaces. 
+  * *Mitigation:* Handled via the `num_restarts` parameter. By running the algorithm from multiple random starting coordinates, we increase the probability of discovering the global maximum.
+* **Pitfall 3: Zero-Frequency Probability Nullification:** When building the PWM, if a specific nucleotide has never appeared at a specific position in the selected k-mers, its probability becomes 0. When scoring new k-mers via multiplication or log-addition, a single 0 can nullify a strong candidate.
+  * *Mitigation:* Implementation of Laplace Pseudocounts (adding +1 to all raw counts) before converting them to frequencies during PWM construction.
 ###AI Usage：Use Genmini and Claud for Format Building
